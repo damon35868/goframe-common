@@ -9,6 +9,20 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var (
+	clientJwtKey = "jwt.client"
+	adminJwtKey  = "jwt.admin"
+)
+
+func SetJwtKey(keys ...string) {
+	if len(keys) > 0 {
+		clientJwtKey = keys[0]
+	}
+	if len(keys) > 1 {
+		adminJwtKey = keys[1]
+	}
+}
+
 func HashedPassword(password string) string {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -44,4 +58,12 @@ func GenToken(ctx context.Context, jwtKey string, id uint, registeredClaims jwt.
 		return "", err
 	}
 	return
+}
+
+func GetClientTokenUserId(ctx context.Context) uint {
+	return GetTokenUserId(ctx, g.Cfg().MustGet(ctx, clientJwtKey).String())
+}
+
+func GetAdminTokenUserId(ctx context.Context) uint {
+	return GetTokenUserId(ctx, g.Cfg().MustGet(ctx, adminJwtKey).String())
 }
