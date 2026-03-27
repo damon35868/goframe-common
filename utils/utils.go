@@ -4,24 +4,11 @@ import (
 	"context"
 
 	"github.com/damon35868/goframe-common/types"
+	"github.com/damon35868/goframe-common/vars"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
-
-var (
-	clientJwtKey = "jwt.client"
-	adminJwtKey  = "jwt.admin"
-)
-
-func SetJwtKey(keys ...string) {
-	if len(keys) > 0 {
-		clientJwtKey = keys[0]
-	}
-	if len(keys) > 1 {
-		adminJwtKey = keys[1]
-	}
-}
 
 func HashedPassword(password string) string {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -61,9 +48,9 @@ func GenToken(ctx context.Context, jwtKey string, id uint, registeredClaims jwt.
 }
 
 func GetClientTokenUserId(ctx context.Context) uint {
-	return GetTokenUserId(ctx, g.Cfg().MustGet(ctx, clientJwtKey).String())
+	return GetTokenUserId(ctx, g.Cfg().MustGet(ctx, vars.ClientJwtKey).String())
 }
 
 func GetAdminTokenUserId(ctx context.Context) uint {
-	return GetTokenUserId(ctx, g.Cfg().MustGet(ctx, adminJwtKey).String())
+	return GetTokenUserId(ctx, g.Cfg().MustGet(ctx, vars.AdminJwtKey).String())
 }
