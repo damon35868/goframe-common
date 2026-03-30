@@ -24,9 +24,9 @@ type RedisLock struct {
 // Lock 获取锁
 // 返回 true: 获取锁成功, false: 获取锁失败
 func (lock *RedisLock) Lock() bool {
-	// 如果没有设置等待间隔，使用默认 100ms
+	// 如果没有设置等待间隔，使用默认 50ms
 	if lock.WaitInterval <= 0 {
-		lock.WaitInterval = 100 * time.Millisecond
+		lock.WaitInterval = 50 * time.Millisecond
 	}
 
 	var deadline time.Time
@@ -66,8 +66,7 @@ func (lock *RedisLock) Lock() bool {
 	}
 }
 
-// Unlock 释放锁
-// 使用 Lua 脚本保证只有持有者才能释放锁
+// Unlock 释放锁 使用 Lua 脚本保证只有持有者才能释放锁
 func (lock *RedisLock) Unlock() bool {
 	// 使用 Lua 脚本释放锁
 	script := `
@@ -106,6 +105,10 @@ func (lock *RedisLock) TryLock(action func(), releaseLock ...bool) error {
 	return nil
 }
 
+/**
+ * @description: 缓存记忆函数,先从缓存获取数据,如果没有则执行 action 获取数据并存入缓存
+ * @return {*}
+ */
 func CacheRemember[T any](ctx context.Context, key string, duration time.Duration, action func() *T) (res *T, err error) {
 	rel, err := cache.Redis.Get(ctx, key)
 	if err != nil {
