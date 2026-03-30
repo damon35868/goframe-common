@@ -18,7 +18,7 @@ func commonAuth(r *ghttp.Request, jwtKey string) {
 		return []byte(jwtKey), nil
 	})
 	if err != nil || token == nil || !token.Valid {
-		r.Response.WriteStatus(http.StatusForbidden)
+		r.Response.WriteStatus(http.StatusUnauthorized)
 		r.Response.ClearBuffer()
 
 		msg := "token无效或已过期"
@@ -26,7 +26,7 @@ func commonAuth(r *ghttp.Request, jwtKey string) {
 			msg = err.Error()
 		}
 		r.Response.WriteJson(g.Map{
-			"code":    http.StatusForbidden,
+			"code":    http.StatusUnauthorized,
 			"message": msg,
 		})
 		r.Exit()
