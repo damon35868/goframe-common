@@ -2,7 +2,9 @@ package helper
 
 import (
 	"context"
+	"time"
 
+	"github.com/damon35868/goframe-common/cache"
 	"github.com/gogf/gf/v2/frame/g"
 )
 
@@ -54,4 +56,24 @@ func (lock *RedisLock) Unlock() bool {
 		return false
 	}
 	return result.Int() == 1
+}
+
+func CacheRemember[T any](ctx context.Context, key string, duration time.Duration, action func() *T) (res *T, err error) {
+	rel, err := cache.Redis.Get(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	if !rel.IsNil() {
+		err = rel.Struct(&res)
+		if err != nil {
+			return nil, err
+		}
+		return res, nil
+	}
+	value := action()
+	if err := cache.Redis.Set(ctx, key, value, duration); err != nil {
+		return nil, err
+	}
+
+	return value, nil
 }
