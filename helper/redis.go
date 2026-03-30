@@ -91,9 +91,9 @@ func (lock *RedisLock) TryLock(action func(), releaseLock ...bool) error {
 		unLock := true
 		if len(releaseLock) > 0 {
 			unLock = releaseLock[0]
-			if unLock {
-				defer lock.Unlock()
-			}
+		}
+		if unLock {
+			defer lock.Unlock()
 		}
 		action()
 	} else {
