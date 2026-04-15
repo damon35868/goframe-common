@@ -26,6 +26,9 @@ func GetTokenUserId(ctx context.Context, jwtKey string) uint {
 	tokenClaims, _ := jwt.ParseWithClaims(tokenString, &types.JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(jwtKey), nil
 	})
+	if tokenClaims == nil {
+		return 0
+	}
 	if claims, ok := tokenClaims.Claims.(*types.JwtClaims); ok && tokenClaims.Valid {
 		return claims.Id
 	}
