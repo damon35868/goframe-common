@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/damon35868/goframe-common/cache"
 	"github.com/damon35868/goframe-common/commonError"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -109,20 +108,24 @@ func (lock *RedisLock) TryLock(action func(), releaseLock ...bool) error {
  * @description: 缓存记忆函数,先从缓存获取数据,如果没有则执行 action 获取数据并存入缓存
  * @return {*}
  */
-func CacheRemember[T any](ctx context.Context, key string, duration time.Duration, action func() *T) (res *T, err error) {
-	rel, err := cache.Redis.Get(ctx, key)
+func CacheRemember[T any](ctx context.Context, key string, duration time.Duration, action func() (*T, error)) (res *T, err error) {
+	rel, err := g.Redis().Get(ctx, key)
 	if err != nil {
 		return nil, err
 	}
-	if !rel.IsNil() {
-		err = rel.Struct(&res)
-		if err != nil {
+	if !rel.IsEmpty() {
+		if err = rel.Scan(&res); err != nil {
 			return nil, err
 		}
+		// 如果 Scan 后的 res 依然没有有效数据（比如 ID 为 0），这里可以加逻辑
 		return res, nil
 	}
-	value := action()
-	if err := cache.Redis.Set(ctx, key, value, duration); err != nil {
+	value, err := action()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := g.Redis().SetEX(ctx, key, value, int64(duration.Seconds())); err != nil {
 		return nil, err
 	}
 
